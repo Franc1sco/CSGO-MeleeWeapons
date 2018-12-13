@@ -20,7 +20,7 @@
 #include <sdktools>
 #include <cstrike>
 
-#define DATA "1.1"
+#define DATA "1.2"
 
 public Plugin myinfo =
 {
@@ -62,17 +62,13 @@ public Action Timer_Delay(Handle timer, int id)
 		return;
 		
 	
-	int weapon, index;
-	char sName[64]; 
-	// clear all in the the melee slot except taser
-	while((weapon = GetNextWeapon(client, index)) != -1)
+	int weapon;
+	
+	// remove all the weapons on "melee slot" in order to prevent the bug of duplicated fists
+	while((weapon = GetPlayerWeaponSlot(client, CS_SLOT_KNIFE)) != -1)
 	{
-		GetEdictClassname(weapon, sName, sizeof(sName));
-		if (StrEqual(sName, "weapon_melee") || StrEqual(sName, "weapon_knife"))
-		{
-			RemovePlayerItem(client, weapon);
-			AcceptEntityInput(weapon, "Kill");
-		}
+		RemovePlayerItem(client, weapon);
+		AcceptEntityInput(weapon, "Kill");
 	}
 	
 	// give fists
@@ -85,28 +81,3 @@ public Action Timer_Delay(Handle timer, int id)
 		EquipPlayerWeapon(client, knife); // if not then knife dropped :s
 	}
 }
-
-// stock from https://forums.alliedmods.net/showthread.php?t=312551
-stock int GetNextWeapon(int client, int &weaponIndex) 
-{ 
-    static int weaponsOffset = -1; 
-    if (weaponsOffset == -1) 
-        weaponsOffset = FindDataMapInfo(client, "m_hMyWeapons"); 
-     
-    int offset = weaponsOffset + (weaponIndex * 4); 
-     
-    int weapon; 
-    while (weaponIndex < 48)  
-    { 
-        weaponIndex++; 
-         
-        weapon = GetEntDataEnt2(client, offset); 
-         
-        if (IsValidEdict(weapon))  
-            return weapon; 
-         
-        offset += 4; 
-    } 
-     
-    return -1; 
-}  
