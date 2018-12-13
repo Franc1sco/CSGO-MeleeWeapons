@@ -20,7 +20,7 @@
 #include <sdktools>
 #include <cstrike>
 
-#define DATA "1.0"
+#define DATA "1.1"
 
 public Plugin myinfo =
 {
@@ -31,8 +31,13 @@ public Plugin myinfo =
 	url = "http://steamcommunity.com/id/franug"
 };
 
+ConVar cv_team, cv_knifeandfists;
+
 public void OnPluginStart()
 {
+	cv_team = CreateConVar("sm_csgofists_team", "4", "Apply only to a team. 2 = terrorist, 3 = counter-terrorist, 4 = both.");
+	cv_knifeandfists = CreateConVar("sm_csgofists_knifeandfists", "0", "Give knife and fists or just fists? 1 = both, 0 = only fists.");
+	
 	// Plugin only for csgo
 	if(GetEngineVersion() != Engine_CSGO)
 		SetFailState("This plugin is for CSGO only.");
@@ -53,9 +58,10 @@ public Action Timer_Delay(Handle timer, int id)
 {
 	// check if client valid
 	int client = GetClientOfUserId(id);
-	if(!client || !IsClientInGame(client) || !IsPlayerAlive(client))
+	if(!client || !IsClientInGame(client) || !IsPlayerAlive(client) || (cv_team.IntValue < 4 && cv_team.IntValue != GetClientTeam(client)))
 		return;
 		
+	
 	int weapon, index;
 	char sName[64]; 
 	// clear all in the the melee slot except taser
@@ -72,6 +78,12 @@ public Action Timer_Delay(Handle timer, int id)
 	// give fists
 	int iFists = GivePlayerItem(client, "weapon_fists");
 	EquipPlayerWeapon(client, iFists);
+	
+	if(cv_knifeandfists.BoolValue)
+	{
+		int knife = GivePlayerItem(client, "weapon_knife");
+		EquipPlayerWeapon(client, knife); // if not then knife dropped :s
+	}
 }
 
 // stock from https://forums.alliedmods.net/showthread.php?t=312551
