@@ -20,7 +20,7 @@
 #include <sdktools>
 #include <cstrike>
 
-#define DATA "2.0"
+#define DATA "2.1"
 
 public Plugin myinfo =
 {
@@ -38,6 +38,7 @@ ConVar cv_axe;
 ConVar cv_hammer;
 ConVar cv_spanner;
 ConVar cv_blockattack2;
+ConVar cv_wtimer;
 
 int g_iTeam;
 int g_bFists;
@@ -46,16 +47,20 @@ int g_bAxe;
 int g_bHammer;
 int g_bSpanner;
 int g_bBlockAttack2;
+float g_fTimer;
 
 public void OnPluginStart()
 {
-	cv_team = CreateConVar("sm_csgofists_team", "4", "Apply only to a team. 2 = terrorist, 3 = counter-terrorist, 4 = both.", 0, true, 0.0, true, 4.0);
-	cv_fists = CreateConVar("sm_csgofists_fists", "1", "Give fists? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
-	cv_knife = CreateConVar("sm_csgofists_knife", "1", "Give knife? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
-	cv_axe = CreateConVar("sm_csgofists_axe", "0", "Give axe on spawn? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
-	cv_hammer = CreateConVar("sm_csgofists_hammer", "0", "Give hammer on spawn? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
-	cv_spanner = CreateConVar("sm_csgofists_spanner", "0", "Give spanner on spawn? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
-	cv_blockattack2 = CreateConVar("sm_csgofists_blockattack2", "1", "Block right click? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
+	CreateConVar("sm_csgomeleeweapons_version", DATA, "Plugin Version", FCVAR_NONE|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+	
+	cv_team = CreateConVar("sm_csgomeleeweapons_team", "4", "Apply only to a team. 2 = terrorist, 3 = counter-terrorist, 4 = both.", 0, true, 0.0, true, 4.0);
+	cv_fists = CreateConVar("sm_csgomeleeweapons_fists", "1", "Give fists? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
+	cv_knife = CreateConVar("sm_csgomeleeweapons_knife", "1", "Give knife? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
+	cv_axe = CreateConVar("sm_csgomeleeweapons_axe", "0", "Give axe on spawn? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
+	cv_hammer = CreateConVar("sm_csgomeleeweapons_hammer", "0", "Give hammer on spawn? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
+	cv_spanner = CreateConVar("sm_csgomeleeweapons_spanner", "0", "Give spanner on spawn? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
+	cv_blockattack2 = CreateConVar("sm_csgomeleeweapons_blockattack2", "1", "Block right click? 1 = yes, 0 = no.", 0, true, 0.0, true, 1.0);
+	cv_wtimer = CreateConVar("sm_csgomeleeweapons_timer", "1.6", "Time in seconds after spawn to give melee weapons.", 0, true, 0.0);
 	
 	g_iTeam = GetConVarInt(cv_team);
 	g_bFists = GetConVarInt(cv_fists);
@@ -64,6 +69,7 @@ public void OnPluginStart()
 	g_bHammer = GetConVarInt(cv_hammer);
 	g_bSpanner = GetConVarInt(cv_spanner);
 	g_bBlockAttack2 = GetConVarInt(cv_blockattack2);
+	g_fTimer = GetConVarFloat(cv_wtimer);
 	
 	HookConVarChange(cv_team, OnConVarChanged);
 	HookConVarChange(cv_fists, OnConVarChanged);
@@ -72,6 +78,7 @@ public void OnPluginStart()
 	HookConVarChange(cv_hammer, OnConVarChanged);
 	HookConVarChange(cv_spanner, OnConVarChanged);
 	HookConVarChange(cv_blockattack2, OnConVarChanged);
+	HookConVarChange(cv_wtimer, OnConVarChanged);
 	
 	// Plugin only for csgo
 	if(GetEngineVersion() != Engine_CSGO)
@@ -80,7 +87,7 @@ public void OnPluginStart()
 	// hook spawn event
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	
-	AutoExecConfig(true, "CSGO_MELEE");
+	AutoExecConfig(true, "csgo_melee_weapons");
 }
 
 public void OnConVarChanged(ConVar convar, const char[] oldVal, const char[] newVal)
@@ -99,6 +106,8 @@ public void OnConVarChanged(ConVar convar, const char[] oldVal, const char[] new
 		g_bSpanner = StringToInt(newVal);
 	} else if (convar == cv_blockattack2) {
 		g_bBlockAttack2 = StringToInt(newVal);
+	} else if (convar == cv_wtimer) {
+		g_fTimer = StringToFloat(newVal);
 	}
 }
 
@@ -107,7 +116,7 @@ public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
     
     // delay for don't conflict with others plugins that give weapons on spawn (?)
-    CreateTimer(1.6, Timer_Delay, GetClientUserId(client));
+    CreateTimer(g_fTimer, Timer_Delay, GetClientUserId(client));
 }  
 
 public Action Timer_Delay(Handle timer, int id)
