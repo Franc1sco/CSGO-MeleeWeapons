@@ -20,7 +20,7 @@
 #include <sdktools>
 #include <cstrike>
 
-#define DATA "2.1"
+#define DATA "2.1.1"
 
 public Plugin myinfo =
 {
@@ -192,6 +192,11 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 		char buffer[128];
 		
 		int item = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+		
+		// prevent log errors
+		if(item == -1)
+			return Plugin_Continue;
+		
 		GetEntityClassname(item, buffer, sizeof(buffer));
 		
 		if (StrEqual(buffer, "weapon_fists", false) || StrEqual(buffer, "weapon_axe", false) || StrEqual(buffer, "weapon_hammer", false) || StrEqual(buffer, "weapon_spanner", false))
