@@ -20,7 +20,7 @@
 #include <sdktools>
 #include <cstrike>
 
-#define DATA "2.1.1"
+#define DATA "2.2"
 
 public Plugin myinfo =
 {
@@ -199,7 +199,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 		
 		GetEntityClassname(item, buffer, sizeof(buffer));
 		
-		if (StrEqual(buffer, "weapon_fists", false) || StrEqual(buffer, "weapon_axe", false) || StrEqual(buffer, "weapon_hammer", false) || StrEqual(buffer, "weapon_spanner", false))
+		if (StrEqual(buffer, "weapon_fists", false) || StrEqual(buffer, "weapon_melee", false))
 		{
 			buttons &= ~IN_ATTACK2; //Don't press attack 2
 			return Plugin_Changed;
